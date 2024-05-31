@@ -7,6 +7,7 @@ use tokio::sync::Mutex;
 use tracing::{error, debug, warn, info};
 
 
+#[derive(Debug)]
 pub struct SafePool{
     pool: Mutex<Option<Pool>>,
     url: String
