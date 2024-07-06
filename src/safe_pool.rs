@@ -23,7 +23,7 @@ impl SafePool {
 
     pub async fn ensure(&self) {
         loop {
-            debug!("Trying to open Postgres...");
+            debug!("Trying to open Postgres at {} ...", self.url);
             match create(&self.url) {
                 Ok(pool) => {
                     let mut locked = self.pool.lock().await;
