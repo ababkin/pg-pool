@@ -9,48 +9,50 @@ use tracing::{error, debug, warn, info};
 
 #[derive(Debug)]
 pub struct SafePool{
-    pool: Mutex<Option<Pool>>,
-    url: String
+    pool: Pool
 }
 
 impl SafePool {
-    pub fn new(url: String) -> SafePool { SafePool{ pool: Mutex::new(None), url } }
-
-    pub async fn invalidate(&self) -> () {
-        let mut lock = self.pool.lock().await;
-        *lock = None;
+    pub fn new(url: String) -> Result<Self, Error> { 
+        create(&url).map(|pool| Self { pool })
     }
 
-    pub async fn ensure(&self) {
-        loop {
-            debug!("Trying to open Postgres at {} ...", self.url);
-            match create(&self.url) {
-                Ok(pool) => {
-                    let mut locked = self.pool.lock().await;
-                    *locked = Some(pool);
-                    debug!("Connected to Postgres.");
-                    break;
-                },
-                Err(e) => {
-                    error!("Failed to connect to Postgres: {:?}", e);
-                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Wait before retrying
-                }
-            }
-        }
-    }
+    // pub async fn invalidate(&self) -> () {
+    //     let mut lock = self.pool.lock().await;
+    //     *lock = None;
+    // }
+
+    // pub async fn ensure(&self) {
+    //     loop {
+    //         debug!("Trying to open Postgres at {} ...", self.url);
+    //         match create(&self.url) {
+    //             Ok(pool) => {
+    //                 let mut locked = self.pool.lock().await;
+    //                 *locked = Some(pool);
+    //                 debug!("Connected to Postgres.");
+    //                 break;
+    //             },
+    //             Err(e) => {
+    //                 error!("Failed to connect to Postgres: {:?}", e);
+    //                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Wait before retrying
+    //             }
+    //         }
+    //     }
+    // }
 
     pub async fn get(&self) -> Result<Client, Error> {
-        loop {
-            {
-                let lock = self.pool.lock().await;
-                if let Some(pool) = &*lock {
-                    return Ok(pool.get().await?);  // Clone the channel before returning
-                }
-            }
-            warn!("PG connection lost, attempting to reconnect...");
-            self.ensure().await;
-            // tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Wait before retrying
-        }
+        // loop {
+        //     {
+        //         let lock = self.pool.lock().await;
+        //         if let Some(pool) = &*lock {
+        //             return Ok(pool.get().await?);  // Clone the channel before returning
+        //         }
+        //     }
+        //     warn!("PG connection lost, attempting to reconnect...");
+        //     self.ensure().await;
+        //     // tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Wait before retrying
+        // }
+        Ok(self.pool.get().await?)
     }
 
 }
