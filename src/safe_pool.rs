@@ -3,7 +3,6 @@ use deadpool_postgres::{Client, Manager, Config as PoolConfig, Pool, ManagerConf
 use openssl::ssl::{SslConnector, SslMethod};
 use postgres_openssl::MakeTlsConnector;
 use url::Url;
-use tokio::sync::Mutex;
 use tracing::{error, debug, warn, info};
 
 
