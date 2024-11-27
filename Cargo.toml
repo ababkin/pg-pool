@@ -7,7 +7,6 @@ edition = "2021"
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 deadpool-postgres = { version = "0.13", features = ["rt_tokio_1"] }
-dotenv = "0.15"
 openssl = "0.10"
 postgres-openssl = "0.5"
 tokio = { version = "1.37", features = ["full"] }
