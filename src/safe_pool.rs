@@ -1,10 +1,7 @@
-use anyhow::{Result, Error};
-use deadpool_postgres::{Client, Manager, Config as PoolConfig, Pool, ManagerConfig, RecyclingMethod};
+use deadpool_postgres::{Client, Config as PoolConfig, Pool};
 use openssl::ssl::{SslConnector, SslMethod};
 use postgres_openssl::MakeTlsConnector;
 use url::Url;
-use tracing::{error, debug, warn, info};
-
 
 #[derive(Debug)]
 pub struct SafePool{
@@ -12,7 +9,7 @@ pub struct SafePool{
 }
 
 impl SafePool {
-    pub fn new(url: String) -> Result<Self, Error> { 
+    pub fn new(url: String) -> Result<Self, anyhow::Error> { 
         create(&url).map(|pool| Self { pool })
     }
 
@@ -39,7 +36,7 @@ impl SafePool {
     //     }
     // }
 
-    pub async fn get(&self) -> Result<Client, Error> {
+    pub async fn get(&self) -> Result<Client, anyhow::Error> {
         // loop {
         //     {
         //         let lock = self.pool.lock().await;
@@ -56,7 +53,7 @@ impl SafePool {
 
 }
 
-fn config_from_url(url: &str) -> Result<PoolConfig, Error> {
+fn config_from_url(url: &str) -> Result<PoolConfig, anyhow::Error> {
     let url = Url::parse(url)?;
     let mut cfg = PoolConfig::new();
 
@@ -82,7 +79,7 @@ fn config_from_url(url: &str) -> Result<PoolConfig, Error> {
 //     Ok(pg_config)
 // }
 
-fn create(url: &str) -> Result<Pool, Error> {
+fn create(url: &str) -> Result<Pool, anyhow::Error> {
     let pool_config = config_from_url(url)?;
 
     let mut builder = SslConnector::builder(SslMethod::tls())?;
