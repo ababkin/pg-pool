@@ -1,15 +1,17 @@
-use deadpool_postgres::{Client, Config as PoolConfig, Pool};
+use deadpool_postgres::{Config as PoolConfig, Pool};
 use openssl::ssl::{SslConnector, SslMethod};
 use postgres_openssl::MakeTlsConnector;
 use url::Url;
 
+pub use deadpool_postgres::Client;
+
 #[derive(Debug)]
-pub struct SafePool{
-    pool: Pool
+pub struct SafePool {
+    pool: Pool,
 }
 
 impl SafePool {
-    pub fn new(url: String) -> Result<Self, anyhow::Error> { 
+    pub fn new(url: String) -> Result<Self, anyhow::Error> {
         create(&url).map(|pool| Self { pool })
     }
 
@@ -50,7 +52,6 @@ impl SafePool {
         // }
         Ok(self.pool.get().await?)
     }
-
 }
 
 fn config_from_url(url: &str) -> Result<PoolConfig, anyhow::Error> {
@@ -60,7 +61,7 @@ fn config_from_url(url: &str) -> Result<PoolConfig, anyhow::Error> {
     cfg.user = Some(url.username().to_owned());
     cfg.password = url.password().map(|p| p.to_owned());
     cfg.host = Some(url.host_str().unwrap_or("").to_owned());
-    cfg.port = url.port().or(Some(5432));  // Default to 5432 if no port is specified
+    cfg.port = url.port().or(Some(5432)); // Default to 5432 if no port is specified
     cfg.dbname = Some(url.path().trim_start_matches('/').to_owned());
 
     Ok(cfg)
@@ -83,12 +84,11 @@ fn create(url: &str) -> Result<Pool, anyhow::Error> {
     let pool_config = config_from_url(url)?;
 
     let mut builder = SslConnector::builder(SslMethod::tls())?;
-    builder.set_verify(openssl::ssl::SslVerifyMode::NONE);  // Modify according to your security requirements
+    builder.set_verify(openssl::ssl::SslVerifyMode::NONE); // Modify according to your security requirements
     let connector = MakeTlsConnector::new(builder.build());
 
     let pool = pool_config.create_pool(None, connector)?;
     pool.resize(16);
-
 
     // let pg_config = pg_config_from_url(&database_url)?;
     // let mgr_config = ManagerConfig {
